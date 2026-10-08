@@ -18,7 +18,8 @@ amazon.html, checkout.html,
 orders.html, tracking.html   Seiten
 scripts/                     Seitenlogik (amazon.js, checkout.js, checkout/, utils/)
 data/                        Produkte, Warenkorb, Lieferoptionen, Bestellungen
-backend/products.json        Lokale Produktdaten
+server.js                    Webserver und API
+backend/products.json        Produktdaten
 styles/                      CSS (shared/ und pages/)
 images/                      Logos, Icons, Produkt- und Bewertungsbilder
 tests/                       Jasmine-Tests (tests.html)
@@ -26,24 +27,28 @@ tests/                       Jasmine-Tests (tests.html)
 
 ## Starten
 
-Da ES-Module verwendet werden, funktioniert das Projekt **nicht** per Doppelklick (`file://`), sondern muss über einen lokalen Webserver ausgeliefert werden, z. B.:
+Voraussetzung: [Node.js](https://nodejs.org) (getestet mit Version 24). Es müssen keine Pakete installiert werden.
 
 ```bash
-# VS Code: Erweiterung „Live Server“ → Rechtsklick auf amazon.html → „Open with Live Server“
-
-# oder mit Python
-python -m http.server 8000
-
-# oder mit Node
-npx serve
+npm start
 ```
 
-Anschließend `http://localhost:8000/amazon.html` öffnen.
+Anschließend `http://localhost:3000/amazon.html` öffnen. Über die Umgebungsvariable `PORT` lässt sich ein anderer Port wählen.
+
+Der Server liefert die Seiten **und** die API aus. Ein reiner Dateiserver (z. B. Live Server oder `python -m http.server`) reicht nicht mehr, weil dann die `/api`-Endpunkte fehlen.
 
 ## Tests
 
-Die Tests laufen im Browser. Mit laufendem Webserver `tests/tests.html` öffnen. Getestet werden u. a. Währungsformatierung, Warenkorb-Funktionen und die Checkout-Bestellübersicht.
+Die Tests laufen im Browser. Mit laufendem Server `http://localhost:3000/tests/tests.html` öffnen. Getestet werden u. a. Währungsformatierung, Warenkorb-Funktionen und die Checkout-Bestellübersicht.
 
-## Backend / externe Abhängigkeiten
+## Backend
 
-Das Projekt hat kein eigenes Backend. Produkte und Bestellungen werden über die API von `https://supersimplebackend.dev` geladen bzw. gesendet; zusätzlich werden `dayjs` und weitere Hilfsmodule von `unpkg.com` eingebunden. Eine Internetverbindung ist daher erforderlich.
+Das Projekt bringt ein eigenes kleines Backend mit ([server.js](server.js), ohne Abhängigkeiten):
+
+| Endpoint | Beschreibung |
+| --- | --- |
+| `GET /api/products` | Alle Produkte (aus `backend/products.json`) |
+| `POST /api/orders` | Legt eine Bestellung an. Body: `{"cart": [{"productId", "quantity", "deliveryOptionId"}]}`. Der Server prüft Produkt, Menge und Lieferoption und berechnet die geschätzte Lieferzeit. |
+| `GET /api/orders` | Alle gespeicherten Bestellungen (in `backend/orders.json`, nicht im Repo) |
+
+Weiterhin extern eingebunden sind `dayjs` und ein Hilfsmodul von `unpkg.com` (in `scripts/checkout/orderSummary.js`), dafür ist eine Internetverbindung nötig.
